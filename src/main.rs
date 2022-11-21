@@ -1,16 +1,18 @@
 use bevy::{prelude::*, window::PresentMode};
-use bevy_inspector_egui::WorldInspectorPlugin;
+// use bevy_inspector_egui::WorldInspectorPlugin;
 
 use game_window::{initilizate_window, GameWindowPlugin, WindowDimensions};
-use game_world::GameWorldPlugin;
-use platforms::{Platform, PlatformsPlugin};
-use player::{spawn_player_system, Player, PlayerPlugin};
+use gameplay_state::{initilizate_gameplay_state_system, GameplayStatePlugin};
+use platforms::Platform;
+use player::{spawn_player_system, Player};
+use ui::UIPlugin;
 
 mod game_camera;
 mod game_window;
-mod game_world;
+mod gameplay_state;
 mod platforms;
 mod player;
+mod ui;
 
 const WINDOW_TITLE: &str = "FLOOR FIFTY";
 const WINDOW_WIDTH: i16 = 960;
@@ -35,7 +37,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
         )
         .add_plugin(GameWindowPlugin)
-        .add_plugin(GameWorldPlugin)
-        .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(GameplayStatePlugin)
+        // .add_plugin(WorldInspectorPlugin::new())
         .run();
 }

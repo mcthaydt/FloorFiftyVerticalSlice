@@ -8,16 +8,12 @@ struct PlayerCamera {
     follow_speed: f32,
 }
 
-const BACKGROUND_COLOR: &str = "F8F0E3";
+const BACKGROUND_COLOR: &str = "c0dffa";
 
 impl Plugin for GameCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(
-            initilizate_camera_system
-                .after(spawn_player_system)
-                .at_end(),
-        )
-        .add_system(follow_player_system);
+        app.add_startup_system(initilizate_camera_system.after(spawn_player_system))
+            .add_system(follow_player_system);
     }
 }
 

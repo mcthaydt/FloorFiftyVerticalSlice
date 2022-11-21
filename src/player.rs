@@ -1,10 +1,10 @@
-use crate::{Platform, WindowDimensions};
+use crate::{initilizate_gameplay_state_system, Platform, WindowDimensions};
 use bevy::prelude::*;
 use bevy_rapier2d::{prelude::*, rapier::prelude::CollisionEventFlags};
 
 pub struct PlayerPlugin;
 
-const PLAYER_COLOR: &str = "2A75BE";
+const PLAYER_COLOR: &str = "656c72";
 const PLAYER_SIZE: f32 = 32.0 * 1.56;
 
 #[derive(Component)]
@@ -14,6 +14,7 @@ pub struct Player {
     player_colliding: bool,
     player_grounded: bool,
     player_facing_right: bool,
+    pub score: i8,
 }
 
 #[derive(Component)]
@@ -21,7 +22,7 @@ struct PlayerGroundDetection;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_player_system)
+        app.add_startup_system(spawn_player_system.after(initilizate_gameplay_state_system))
             .add_system(player_input_system)
             .add_system_to_stage(CoreStage::PostUpdate, player_screen_looping_system)
             .add_system_to_stage(CoreStage::PostUpdate, player_collision_detection_system);
@@ -37,19 +38,22 @@ pub fn spawn_player_system(mut commands: Commands) {
                     color: Color::hex(PLAYER_COLOR).unwrap(),
                     ..Default::default()
                 },
+                transform: Transform::from_xyz(0.0, -PLAYER_SIZE * 2.0, 0.0),
                 ..Default::default()
             },
             RigidBody::Dynamic,
             Velocity::zero(),
-            Collider::ball(PLAYER_SIZE / 2.2),
+            Collider::ball(PLAYER_SIZE / 2.0),
             ActiveEvents::COLLISION_EVENTS,
             LockedAxes::ROTATION_LOCKED,
+            (ActiveCollisionTypes::default() | ActiveCollisionTypes::DYNAMIC_KINEMATIC),
             Player {
                 movement_speed: 300.0,
                 jump_force: 200.0,
                 player_colliding: false,
                 player_grounded: false,
                 player_facing_right: true,
+                score: 0,
             },
         ))
         .id();
@@ -59,6 +63,7 @@ pub fn spawn_player_system(mut commands: Commands) {
             Sensor,
             Collider::cuboid(PLAYER_SIZE / 2.0, PLAYER_SIZE / 9.0),
             ActiveEvents::COLLISION_EVENTS,
+            (ActiveCollisionTypes::default() | ActiveCollisionTypes::KINEMATIC_KINEMATIC),
             TransformBundle {
                 local: Transform::from_xyz(0.0, -PLAYER_SIZE / 2.0 - PLAYER_SIZE / 9.0, 0.0),
                 ..Default::default()
@@ -75,6 +80,7 @@ pub fn spawn_player_system(mut commands: Commands) {
 fn player_input_system(
     keyboard_input: Res<Input<KeyCode>>,
     mut player_query: Query<((&mut Player, &mut Velocity, &mut Transform), With<Player>)>,
+    mut platform_query: Query<&mut Platform, With<Platform>>,
 ) {
     let (mut player, _player_velocity) = player_query.single_mut();
 
@@ -108,6 +114,13 @@ fn player_input_system(
     let respawn = keyboard_input.just_pressed(KeyCode::R);
     if respawn == true {
         player.2.translation = Vec3::splat(0.0);
+        player.0.score = 0;
+
+        for mut platform_object in platform_query.iter_mut() {
+            if platform_object.already_collided != false {
+                platform_object.already_collided = false;
+            }
+        }
     }
 }
 
@@ -134,7 +147,10 @@ fn player_collision_detection_system(
                 )
             {
                 player_entity.1.player_colliding = true;
-                platform_object.already_collided = true;
+                if platform_object.already_collided != true {
+                    player_entity.1.score += 1;
+                    platform_object.already_collided = true;
+                }
             } else if *collision_event
                 == CollisionEvent::Stopped(
                     player_entity.0,
