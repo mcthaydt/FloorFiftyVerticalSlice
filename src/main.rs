@@ -4,7 +4,7 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use game_window::{initilizate_window, GameWindowPlugin, WindowDimensions};
 use game_world::GameWorldPlugin;
 use platforms::{Platform, PlatformsPlugin};
-use player::{Player, PlayerPlugin};
+use player::{spawn_player_system, Player, PlayerPlugin};
 
 mod game_camera;
 mod game_window;

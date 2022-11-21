@@ -1,4 +1,4 @@
-use crate::Platform;
+use crate::{Platform, WindowDimensions};
 use bevy::prelude::*;
 use bevy_rapier2d::{prelude::*, rapier::prelude::CollisionEventFlags};
 
@@ -23,11 +23,12 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_player_system)
             .add_system(player_input_system)
+            .add_system_to_stage(CoreStage::PostUpdate, player_screen_looping_system)
             .add_system_to_stage(CoreStage::PostUpdate, player_collision_detection_system);
     }
 }
 
-fn spawn_player_system(mut commands: Commands) {
+pub fn spawn_player_system(mut commands: Commands) {
     let player = commands
         .spawn((
             SpriteBundle {
@@ -56,10 +57,10 @@ fn spawn_player_system(mut commands: Commands) {
     let player_ground_detection = commands
         .spawn((
             Sensor,
-            Collider::cuboid(PLAYER_SIZE / 2.0, PLAYER_SIZE / 6.0),
+            Collider::cuboid(PLAYER_SIZE / 2.0, PLAYER_SIZE / 9.0),
             ActiveEvents::COLLISION_EVENTS,
             TransformBundle {
-                local: Transform::from_xyz(0.0, -PLAYER_SIZE / 2.0 - PLAYER_SIZE / 6.0, 0.0),
+                local: Transform::from_xyz(0.0, -PLAYER_SIZE / 2.0 - PLAYER_SIZE / 9.0, 0.0),
                 ..Default::default()
             },
             PlayerGroundDetection,
@@ -162,5 +163,18 @@ fn player_collision_detection_system(
                 player_entity.1.player_grounded = false;
             }
         }
+    }
+}
+
+fn player_screen_looping_system(
+    mut player_query: Query<((&mut Transform, &Player), With<Player>)>,
+    window_dimensions: Res<WindowDimensions>,
+) {
+    let (mut player_transform, _player_object) = player_query.single_mut();
+
+    if player_transform.0.translation.x > window_dimensions.width / 2.0 + PLAYER_SIZE / 2.0 as f32 {
+        player_transform.0.translation.x = -(window_dimensions.width / 2.0) + PLAYER_SIZE * 1.2;
+    } else if player_transform.0.translation.x < -(window_dimensions.width / 2.0) {
+        player_transform.0.translation.x = window_dimensions.width / 2.0 + PLAYER_SIZE / 2.0 as f32;
     }
 }
