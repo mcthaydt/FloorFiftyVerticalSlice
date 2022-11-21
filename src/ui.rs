@@ -7,7 +7,7 @@ pub struct UIPlugin;
 #[derive(Component)]
 struct ScoreUI;
 
-const TEXT_COLOR: &str = "0e1312";
+const TEXT_COLOR: &str = "4c5964";
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {

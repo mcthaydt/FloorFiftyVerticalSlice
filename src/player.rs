@@ -4,7 +4,7 @@ use bevy_rapier2d::{prelude::*, rapier::prelude::CollisionEventFlags};
 
 pub struct PlayerPlugin;
 
-const PLAYER_COLOR: &str = "656c72";
+const PLAYER_COLOR: &str = "a6d36c";
 const PLAYER_SIZE: f32 = 32.0 * 1.56;
 
 #[derive(Component)]
@@ -113,7 +113,7 @@ fn player_input_system(
 
     let respawn = keyboard_input.just_pressed(KeyCode::R);
     if respawn == true {
-        player.2.translation = Vec3::splat(0.0);
+        player.2.translation = Vec3::new(0.0, -PLAYER_SIZE * 2.0, 0.0);
         player.0.score = 0;
 
         for mut platform_object in platform_query.iter_mut() {

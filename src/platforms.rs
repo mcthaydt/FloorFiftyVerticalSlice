@@ -5,7 +5,7 @@ use rand::Rng;
 
 pub struct PlatformsPlugin;
 
-const PLATFORM_COLOR: &str = "a6d36c";
+const PLATFORM_COLOR: &str = "656c72";
 const PLATFORM_WIDTH: f32 = 64.0 * 1.875;
 const PLATFORM_HEIGHT: f32 = 32.0 * 0.625;
 
