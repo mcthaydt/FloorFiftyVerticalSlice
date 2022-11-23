@@ -1,4 +1,5 @@
 use crate::GameplayStateSubstates;
+use crate::{DeathRegionReachedEvent, TopFloorReachedEvent};
 use crate::{Platform, WindowDimensions};
 
 use bevy::prelude::*;
@@ -6,8 +7,8 @@ use bevy_rapier2d::{prelude::*, rapier::prelude::CollisionEventFlags};
 
 pub struct PlayerPlugin;
 
-const PLAYER_COLOR: &str = "a6d36c";
-const PLAYER_SIZE: f32 = 32.0 * 1.56;
+// const PLAYER_COLOR: &str = "a6d36c";
+pub const PLAYER_SIZE: f32 = 32.0 * 1.56;
 
 #[derive(Component)]
 pub struct Player {
@@ -22,9 +23,6 @@ pub struct Player {
 #[derive(Component)]
 struct PlayerGroundDetection;
 
-struct TopFloorReachedEvent;
-struct DeathRegionReachedEvent;
-
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TopFloorReachedEvent>()
@@ -34,27 +32,25 @@ impl Plugin for PlayerPlugin {
                     .with_system(spawn_player_system),
             )
             .add_system_set(
-                SystemSet::on_update(GameplayStateSubstates::PreGame)
-                    .with_system(switch_gameplay_substates_system),
-            )
-            .add_system_set(
                 SystemSet::on_update(GameplayStateSubstates::DuringGame)
                     .with_system(player_input_system)
                     .with_system(player_screen_looping_system)
+                    .with_system(player_animation_system)
                     .with_system(player_collision_detection_system),
             );
     }
 }
 
-pub fn spawn_player_system(mut commands: Commands) {
+pub fn spawn_player_system(mut commands: Commands, asset_server: Res<AssetServer>) {
     let player = commands
         .spawn((
             SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(PLAYER_SIZE, PLAYER_SIZE)),
-                    color: Color::hex(PLAYER_COLOR).unwrap(),
+                    // color: Color::hex(PLAYER_COLOR).unwrap(),
                     ..Default::default()
                 },
+                texture: asset_server.load("PlayerTexture.png"),
                 transform: Transform::from_xyz(0.0, -PLAYER_SIZE * 2.0, 0.0),
                 ..Default::default()
             },
@@ -100,8 +96,7 @@ fn player_input_system(
         (&mut Player, &mut Velocity, &mut Transform, &GlobalTransform),
         With<Player>,
     )>,
-    mut platform_query: Query<&mut Platform, With<Platform>>,
-    mut ev_reset_game: EventReader<TopFloorReachedEvent>,
+    mut failure_event: EventWriter<DeathRegionReachedEvent>,
 ) {
     let (mut player, _player_velocity) = player_query.single_mut();
 
@@ -134,36 +129,11 @@ fn player_input_system(
 
     let respawn = keyboard_input.just_pressed(KeyCode::R);
     if respawn == true {
-        player.2.translation = Vec3::new(0.0, -PLAYER_SIZE * 2.0, 0.0);
-        player.0.score = 0;
-
-        for mut platform_object in platform_query.iter_mut() {
-            if platform_object.already_collided != false {
-                platform_object.already_collided = false;
-            }
-        }
+        failure_event.send(DeathRegionReachedEvent);
     }
 
     if player.3.translation().y < -400.0 {
-        player.2.translation = Vec3::new(0.0, -PLAYER_SIZE * 2.0, 0.0);
-        player.0.score = 0;
-
-        for mut platform_object in platform_query.iter_mut() {
-            if platform_object.already_collided != false {
-                platform_object.already_collided = false;
-            }
-        }
-    }
-
-    for ev in ev_reset_game.iter() {
-        player.2.translation = Vec3::new(0.0, -PLAYER_SIZE * 2.0, 0.0);
-        player.0.score = 0;
-
-        for mut platform_object in platform_query.iter_mut() {
-            if platform_object.already_collided != false {
-                platform_object.already_collided = false;
-            }
-        }
+        failure_event.send(DeathRegionReachedEvent);
     }
 }
 
@@ -243,16 +213,18 @@ fn player_screen_looping_system(
     let (mut player_transform, _player_object) = player_query.single_mut();
 
     if player_transform.0.translation.x > window_dimensions.width / 2.0 + PLAYER_SIZE / 2.0 as f32 {
-        player_transform.0.translation.x = -(window_dimensions.width / 2.0) + PLAYER_SIZE * 1.2;
+        player_transform.0.translation.x = -(window_dimensions.width / 2.0) + PLAYER_SIZE / 2.0;
     } else if player_transform.0.translation.x < -(window_dimensions.width / 2.0) {
         player_transform.0.translation.x = window_dimensions.width / 2.0 + PLAYER_SIZE / 2.0 as f32;
     }
 }
 
-fn switch_gameplay_substates_system(mut gameplay_substate: ResMut<State<GameplayStateSubstates>>) {
-    gameplay_substate
-        .set(GameplayStateSubstates::DuringGame)
-        .unwrap();
-}
+fn player_animation_system(mut player_query: Query<((&mut Sprite, &Player), With<Player>)>) {
+    let (mut player_sprite, _player_object) = player_query.single_mut();
 
-fn reset_game() {}
+    if player_sprite.1.player_facing_right == true {
+        player_sprite.0.flip_x = false;
+    } else {
+        player_sprite.0.flip_x = true;
+    }
+}
