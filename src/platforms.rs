@@ -1,4 +1,4 @@
-use crate::{initilizate_window, WindowDimensions};
+use crate::{GameplayStateSubstates, WindowDimensions};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use rand::Rng;
@@ -29,9 +29,15 @@ struct SpawnCount(i8);
 impl Plugin for PlatformsPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(SpawnCount(19))
-            .add_startup_system(spawn_initial_platform_system.after(initilizate_window))
-            .add_startup_system(spawn_platform_batch)
-            .add_system(platform_properties_system);
+            .add_system_set(
+                SystemSet::on_enter(GameplayStateSubstates::PreGame)
+                    .with_system(spawn_initial_platform_system)
+                    .with_system(spawn_platform_batch),
+            )
+            .add_system_set(
+                SystemSet::on_update(GameplayStateSubstates::PreGame)
+                    .with_system(platform_properties_system),
+            );
     }
 }
 

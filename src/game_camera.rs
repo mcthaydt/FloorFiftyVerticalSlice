@@ -1,4 +1,4 @@
-use crate::{spawn_player_system, Player};
+use crate::{GameplayStateSubstates, Player};
 use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 
 pub struct GameCameraPlugin;
@@ -12,8 +12,14 @@ const BACKGROUND_COLOR: &str = "c0dffa";
 
 impl Plugin for GameCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(initilizate_camera_system.after(spawn_player_system))
-            .add_system(follow_player_system);
+        app.add_system_set(
+            SystemSet::on_enter(GameplayStateSubstates::PreGame)
+                .with_system(initilizate_camera_system),
+        )
+        .add_system_set(
+            SystemSet::on_update(GameplayStateSubstates::DuringGame)
+                .with_system(follow_player_system),
+        );
     }
 }
 

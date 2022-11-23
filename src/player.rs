@@ -1,4 +1,6 @@
-use crate::{initilizate_gameplay_state_system, Platform, WindowDimensions};
+use crate::GameplayStateSubstates;
+use crate::{Platform, WindowDimensions};
+
 use bevy::prelude::*;
 use bevy_rapier2d::{prelude::*, rapier::prelude::CollisionEventFlags};
 
@@ -20,12 +22,27 @@ pub struct Player {
 #[derive(Component)]
 struct PlayerGroundDetection;
 
+struct TopFloorReachedEvent;
+struct DeathRegionReachedEvent;
+
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_player_system.after(initilizate_gameplay_state_system))
-            .add_system(player_input_system)
-            .add_system_to_stage(CoreStage::PostUpdate, player_screen_looping_system)
-            .add_system_to_stage(CoreStage::PostUpdate, player_collision_detection_system);
+        app.add_event::<TopFloorReachedEvent>()
+            .add_event::<DeathRegionReachedEvent>()
+            .add_system_set(
+                SystemSet::on_enter(GameplayStateSubstates::PreGame)
+                    .with_system(spawn_player_system),
+            )
+            .add_system_set(
+                SystemSet::on_update(GameplayStateSubstates::PreGame)
+                    .with_system(switch_gameplay_substates_system),
+            )
+            .add_system_set(
+                SystemSet::on_update(GameplayStateSubstates::DuringGame)
+                    .with_system(player_input_system)
+                    .with_system(player_screen_looping_system)
+                    .with_system(player_collision_detection_system),
+            );
     }
 }
 
@@ -43,7 +60,7 @@ pub fn spawn_player_system(mut commands: Commands) {
             },
             RigidBody::Dynamic,
             Velocity::zero(),
-            Collider::ball(PLAYER_SIZE / 2.0),
+            Collider::ball(PLAYER_SIZE / 1.9),
             ActiveEvents::COLLISION_EVENTS,
             LockedAxes::ROTATION_LOCKED,
             (ActiveCollisionTypes::default() | ActiveCollisionTypes::DYNAMIC_KINEMATIC),
@@ -61,7 +78,7 @@ pub fn spawn_player_system(mut commands: Commands) {
     let player_ground_detection = commands
         .spawn((
             Sensor,
-            Collider::cuboid(PLAYER_SIZE / 2.0, PLAYER_SIZE / 9.0),
+            Collider::cuboid(PLAYER_SIZE / 3.0, PLAYER_SIZE / 9.0),
             ActiveEvents::COLLISION_EVENTS,
             (ActiveCollisionTypes::default() | ActiveCollisionTypes::KINEMATIC_KINEMATIC),
             TransformBundle {
@@ -79,8 +96,12 @@ pub fn spawn_player_system(mut commands: Commands) {
 
 fn player_input_system(
     keyboard_input: Res<Input<KeyCode>>,
-    mut player_query: Query<((&mut Player, &mut Velocity, &mut Transform), With<Player>)>,
+    mut player_query: Query<(
+        (&mut Player, &mut Velocity, &mut Transform, &GlobalTransform),
+        With<Player>,
+    )>,
     mut platform_query: Query<&mut Platform, With<Platform>>,
+    mut ev_reset_game: EventReader<TopFloorReachedEvent>,
 ) {
     let (mut player, _player_velocity) = player_query.single_mut();
 
@@ -122,10 +143,33 @@ fn player_input_system(
             }
         }
     }
+
+    if player.3.translation().y < -400.0 {
+        player.2.translation = Vec3::new(0.0, -PLAYER_SIZE * 2.0, 0.0);
+        player.0.score = 0;
+
+        for mut platform_object in platform_query.iter_mut() {
+            if platform_object.already_collided != false {
+                platform_object.already_collided = false;
+            }
+        }
+    }
+
+    for ev in ev_reset_game.iter() {
+        player.2.translation = Vec3::new(0.0, -PLAYER_SIZE * 2.0, 0.0);
+        player.0.score = 0;
+
+        for mut platform_object in platform_query.iter_mut() {
+            if platform_object.already_collided != false {
+                platform_object.already_collided = false;
+            }
+        }
+    }
 }
 
 fn player_collision_detection_system(
     mut collision_events: EventReader<CollisionEvent>,
+    mut top_floor_reached_event: EventWriter<TopFloorReachedEvent>,
     player_ground_detection_query: Query<(
         (Entity, &mut PlayerGroundDetection),
         With<PlayerGroundDetection>,
@@ -137,6 +181,16 @@ fn player_collision_detection_system(
     let (player_ground_detection_entity, _player_ground_detection_object) =
         player_ground_detection_query.single();
 
+    let mut total_count = 0;
+
+    for _index in platform_query.iter() {
+        total_count += 1;
+    }
+
+    if player_entity.1.score == total_count {
+        top_floor_reached_event.send(TopFloorReachedEvent);
+    }
+
     for collision_event in collision_events.iter() {
         for (platform_entity, mut platform_object) in platform_query.iter_mut() {
             if *collision_event
@@ -147,10 +201,6 @@ fn player_collision_detection_system(
                 )
             {
                 player_entity.1.player_colliding = true;
-                if platform_object.already_collided != true {
-                    player_entity.1.score += 1;
-                    platform_object.already_collided = true;
-                }
             } else if *collision_event
                 == CollisionEvent::Stopped(
                     player_entity.0,
@@ -169,6 +219,10 @@ fn player_collision_detection_system(
                 )
             {
                 player_entity.1.player_grounded = true;
+                if platform_object.already_collided != true {
+                    player_entity.1.score += 1;
+                    platform_object.already_collided = true;
+                }
             } else if *collision_event
                 == CollisionEvent::Stopped(
                     player_ground_detection_entity.0,
@@ -194,3 +248,11 @@ fn player_screen_looping_system(
         player_transform.0.translation.x = window_dimensions.width / 2.0 + PLAYER_SIZE / 2.0 as f32;
     }
 }
+
+fn switch_gameplay_substates_system(mut gameplay_substate: ResMut<State<GameplayStateSubstates>>) {
+    gameplay_substate
+        .set(GameplayStateSubstates::DuringGame)
+        .unwrap();
+}
+
+fn reset_game() {}

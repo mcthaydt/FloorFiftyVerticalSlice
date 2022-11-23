@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::Player;
+use crate::{GameplayStateSubstates, Player};
 
 pub struct UIPlugin;
 
@@ -11,8 +11,14 @@ const TEXT_COLOR: &str = "4c5964";
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(initilizate_score_system)
-            .add_system(update_score_system);
+        app.add_system_set(
+            SystemSet::on_enter(GameplayStateSubstates::PreGame)
+                .with_system(initilizate_score_system),
+        )
+        .add_system_set(
+            SystemSet::on_update(GameplayStateSubstates::DuringGame)
+                .with_system(update_score_system),
+        );
     }
 }
 
