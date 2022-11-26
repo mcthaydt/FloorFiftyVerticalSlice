@@ -1,5 +1,8 @@
 use crate::{game_window::WindowDimensions, GameplayStateSubstates, Player};
-use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
+use bevy::{
+    core_pipeline::{bloom::BloomSettings, clear_color::ClearColorConfig},
+    prelude::*,
+};
 
 pub struct GameCameraPlugin;
 
@@ -28,17 +31,28 @@ impl Plugin for GameCameraPlugin {
 }
 
 fn initilizate_camera_system(mut commands: Commands) {
-    commands.spawn((
-        Camera2dBundle {
-            camera_2d: Camera2d {
-                clear_color: ClearColorConfig::Custom(Color::hex(BACKGROUND_COLOR).unwrap()),
+    let game_cam = commands
+        .spawn((
+            Camera2dBundle {
+                camera: Camera {
+                    hdr: true,
+                    ..default()
+                },
+                camera_2d: Camera2d {
+                    clear_color: ClearColorConfig::Custom(Color::hex(BACKGROUND_COLOR).unwrap()),
+                    ..default()
+                },
+                transform: Transform::from_xyz(0.0, 0.0, 1.0),
+                ..Default::default()
+            },
+            BloomSettings {
+                threshold: 0.68,
+                intensity: 3.05,
                 ..default()
             },
-            transform: Transform::from_xyz(0.0, 0.0, 1.0),
-            ..Default::default()
-        },
-        PlayerCamera { follow_speed: 5.0 },
-    ));
+            PlayerCamera { follow_speed: 5.0 },
+        ))
+        .id();
 }
 
 fn initilizate_background_system(
