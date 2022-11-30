@@ -1,5 +1,5 @@
 use crate::PLAYER_SIZE;
-use crate::{game_camera, platforms, player, ui};
+use crate::{game_camera, game_timer, platforms, player, ui};
 use crate::{Platform, Player};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -10,7 +10,7 @@ pub struct GameplayStatePlugin;
 pub enum GameplayStateSubstates {
     PreGame,
     DuringGame,
-    // PostGame,
+    PostGame,
 }
 
 #[derive(Resource)]
@@ -30,6 +30,7 @@ impl Plugin for GameplayStatePlugin {
             .add_plugin(game_camera::GameCameraPlugin)
             .add_plugin(platforms::PlatformsPlugin)
             .add_plugin(ui::UIPlugin)
+            .add_plugin(game_timer::GameTimerPlugin)
             .add_system_set(
                 SystemSet::on_enter(GameplayStateSubstates::PreGame)
                     .with_system(initilizate_physics_system),

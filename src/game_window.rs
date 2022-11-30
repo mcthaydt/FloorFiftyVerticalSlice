@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::SystemLabels;
-
 pub struct GameWindowPlugin;
 
 #[derive(Resource)]
@@ -16,12 +14,8 @@ impl Plugin for GameWindowPlugin {
             width: 960.0,
             height: 540.0,
         })
-        .add_startup_system(
-            initilizate_window
-                .label(SystemLabels::WindowLabel)
-                .at_start(),
-        )
-        .add_system(bevy::window::close_on_esc.label(SystemLabels::WindowLabel));
+        .add_startup_system(initilizate_window.at_start())
+        .add_system(bevy::window::close_on_esc);
     }
 }
 

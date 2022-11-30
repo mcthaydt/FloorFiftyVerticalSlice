@@ -31,28 +31,26 @@ impl Plugin for GameCameraPlugin {
 }
 
 fn initilizate_camera_system(mut commands: Commands) {
-    let game_cam = commands
-        .spawn((
-            Camera2dBundle {
-                camera: Camera {
-                    hdr: true,
-                    ..default()
-                },
-                camera_2d: Camera2d {
-                    clear_color: ClearColorConfig::Custom(Color::hex(BACKGROUND_COLOR).unwrap()),
-                    ..default()
-                },
-                transform: Transform::from_xyz(0.0, 0.0, 1.0),
-                ..Default::default()
-            },
-            BloomSettings {
-                threshold: 0.68,
-                intensity: 3.05,
+    commands.spawn((
+        Camera2dBundle {
+            camera: Camera {
+                hdr: true,
                 ..default()
             },
-            PlayerCamera { follow_speed: 5.0 },
-        ))
-        .id();
+            camera_2d: Camera2d {
+                clear_color: ClearColorConfig::Custom(Color::hex(BACKGROUND_COLOR).unwrap()),
+                ..default()
+            },
+            transform: Transform::from_xyz(0.0, 0.0, 1.0),
+            ..Default::default()
+        },
+        BloomSettings {
+            threshold: 0.68,
+            intensity: 3.05,
+            ..default()
+        },
+        PlayerCamera { follow_speed: 5.0 },
+    ));
 }
 
 fn initilizate_background_system(

@@ -9,21 +9,12 @@ use platforms::Platform;
 use player::{Player, PLAYER_SIZE};
 
 mod game_camera;
+mod game_timer;
 mod game_window;
 mod gameplay_state;
 mod platforms;
 mod player;
 mod ui;
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, SystemLabel)]
-pub enum SystemLabels {
-    WindowLabel,
-    CameraLabel,
-    GameplayState,
-    PlatformLabel,
-    PlayerLabel,
-    UILabel,
-}
 
 const WINDOW_TITLE: &str = "FLOOR FIFTY";
 const WINDOW_WIDTH: i16 = 960;

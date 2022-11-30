@@ -61,8 +61,8 @@ pub fn spawn_player_system(mut commands: Commands, asset_server: Res<AssetServer
             LockedAxes::ROTATION_LOCKED,
             (ActiveCollisionTypes::default() | ActiveCollisionTypes::DYNAMIC_KINEMATIC),
             Player {
-                movement_speed: 300.0,
-                jump_force: 200.0,
+                movement_speed: 280.0,
+                jump_force: 222.0,
                 player_colliding: false,
                 player_grounded: false,
                 player_facing_right: true,
