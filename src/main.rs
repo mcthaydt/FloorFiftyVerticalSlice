@@ -12,6 +12,7 @@ mod game_camera;
 mod game_timer;
 mod game_window;
 mod gameplay_state;
+mod platform_indicators;
 mod platforms;
 mod player;
 mod ui;

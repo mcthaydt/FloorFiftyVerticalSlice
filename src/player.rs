@@ -47,7 +47,6 @@ pub fn spawn_player_system(mut commands: Commands, asset_server: Res<AssetServer
             SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(PLAYER_SIZE, PLAYER_SIZE)),
-                    // color: Color::hex(PLAYER_COLOR).unwrap(),
                     ..Default::default()
                 },
                 texture: asset_server.load("PlayerTexture.png"),
@@ -62,7 +61,7 @@ pub fn spawn_player_system(mut commands: Commands, asset_server: Res<AssetServer
             (ActiveCollisionTypes::default() | ActiveCollisionTypes::DYNAMIC_KINEMATIC),
             Player {
                 movement_speed: 280.0,
-                jump_force: 222.0,
+                jump_force: 234.8,
                 player_colliding: false,
                 player_grounded: false,
                 player_facing_right: true,

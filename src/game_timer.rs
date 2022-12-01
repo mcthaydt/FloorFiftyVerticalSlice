@@ -24,9 +24,9 @@ impl Plugin for GameTimerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GameStopwatch(Stopwatch::new()))
             .insert_resource(GameTimerUIOffset(Vec3::new(
-                960.0 / 10.0,
-                540.0 / 10.0,
-                0.0,
+                960.0 / 15.0,
+                540.0 / 15.0,
+                1.0,
             )))
             .insert_resource(CurrentGameTime(0.0))
             .insert_resource(FinalGameTime(0.0))
@@ -63,16 +63,16 @@ fn show_timer_ui_system(
     let font = asset_server.load("papercut.ttf");
     let text_style = TextStyle {
         font,
-        font_size: 60.0,
+        font_size: 75.0,
         // f07927
         color: Color::Hsla {
             hue: 0.07,
             saturation: 0.87,
-            lightness: 0.05,
-            alpha: 1.0,
+            lightness: 0.04,
+            alpha: 0.85,
         },
     };
-    let text_alignment = TextAlignment::CENTER;
+    let text_alignment = TextAlignment::CENTER_LEFT;
 
     commands.spawn((
         Text2dBundle {
