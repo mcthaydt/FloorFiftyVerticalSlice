@@ -1,6 +1,7 @@
 use bevy::{prelude::*, window::PresentMode};
 // use bevy_inspector_egui::WorldInspectorPlugin;
 
+use audio_manager::AudioManagerPlugin;
 use game_window::{GameWindowPlugin, WindowDimensions};
 use gameplay_state::{
     DeathRegionReachedEvent, GameplayStatePlugin, GameplayStateSubstates, TopFloorReachedEvent,
@@ -8,6 +9,7 @@ use gameplay_state::{
 use platforms::Platform;
 use player::{Player, PLAYER_SIZE};
 
+mod audio_manager;
 mod game_camera;
 mod game_timer;
 mod game_window;
@@ -41,6 +43,7 @@ fn main() {
         )
         .add_plugin(GameWindowPlugin)
         .add_plugin(GameplayStatePlugin)
+        .add_plugin(AudioManagerPlugin)
         // .add_plugin(WorldInspectorPlugin::new())
         .run();
 }
