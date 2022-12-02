@@ -8,7 +8,7 @@ pub struct PlatformsPlugin;
 pub const PLATFORM_WIDTH: f32 = 64.0 * 1.875;
 pub const PLATFORM_HEIGHT: f32 = 32.0 * 0.625;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum PlatformType {
     Undefined,
     Stationary,

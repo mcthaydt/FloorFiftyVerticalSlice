@@ -7,15 +7,14 @@ use bevy_rapier2d::{prelude::*, rapier::prelude::CollisionEventFlags};
 
 pub struct PlayerPlugin;
 
-// const PLAYER_COLOR: &str = "a6d36c";
 pub const PLAYER_SIZE: f32 = 32.0 * 1.56;
 
 #[derive(Component)]
 pub struct Player {
     movement_speed: f32,
     jump_force: f32,
-    player_colliding: bool,
-    player_grounded: bool,
+    pub player_colliding: bool,
+    pub player_grounded: bool,
     player_facing_right: bool,
     pub score: i8,
 }
@@ -55,13 +54,13 @@ pub fn spawn_player_system(mut commands: Commands, asset_server: Res<AssetServer
             },
             RigidBody::Dynamic,
             Velocity::zero(),
-            Collider::ball(PLAYER_SIZE / 1.8),
+            Collider::ball(PLAYER_SIZE / 1.6),
             ActiveEvents::COLLISION_EVENTS,
             LockedAxes::ROTATION_LOCKED,
             (ActiveCollisionTypes::default() | ActiveCollisionTypes::DYNAMIC_KINEMATIC),
             Player {
-                movement_speed: 353.0,
-                jump_force: 234.8,
+                movement_speed: 386.0,
+                jump_force: 244.8,
                 player_colliding: false,
                 player_grounded: false,
                 player_facing_right: true,
@@ -117,17 +116,17 @@ fn player_input_system(
 
     player.1.linvel.x = player_input_dir.x * player.0.movement_speed;
 
-    if player.0.player_colliding == true {
+    if player.0.player_colliding {
         player.1.linvel.y = player.0.jump_force;
     }
 
     let down = keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down);
     if down {
-        player.1.linvel.y = -player.0.jump_force * 3.0;
+        player.1.linvel.y = -player.0.jump_force * 4.0;
     }
 
     let respawn = keyboard_input.just_pressed(KeyCode::R);
-    if respawn == true {
+    if respawn {
         failure_event.send(DeathRegionReachedEvent);
     }
 
@@ -188,7 +187,7 @@ fn player_collision_detection_system(
                 )
             {
                 player_entity.1.player_grounded = true;
-                if platform_object.already_collided != true {
+                if !platform_object.already_collided {
                     player_entity.1.score += 1;
                     platform_object.already_collided = true;
                 }
@@ -211,17 +210,17 @@ fn player_screen_looping_system(
 ) {
     let (mut player_transform, _player_object) = player_query.single_mut();
 
-    if player_transform.0.translation.x > window_dimensions.width / 2.0 + PLAYER_SIZE / 2.0 as f32 {
+    if player_transform.0.translation.x > window_dimensions.width / 2.0 + PLAYER_SIZE / 2.0_f32 {
         player_transform.0.translation.x = -(window_dimensions.width / 2.0) + PLAYER_SIZE / 2.0;
     } else if player_transform.0.translation.x < -(window_dimensions.width / 2.0) {
-        player_transform.0.translation.x = window_dimensions.width / 2.0 + PLAYER_SIZE / 2.0 as f32;
+        player_transform.0.translation.x = window_dimensions.width / 2.0 + PLAYER_SIZE / 2.0_f32;
     }
 }
 
 fn player_animation_system(mut player_query: Query<((&mut Sprite, &Player), With<Player>)>) {
     let (mut player_sprite, _player_object) = player_query.single_mut();
 
-    if player_sprite.1.player_facing_right == true {
+    if player_sprite.1.player_facing_right {
         player_sprite.0.flip_x = false;
     } else {
         player_sprite.0.flip_x = true;

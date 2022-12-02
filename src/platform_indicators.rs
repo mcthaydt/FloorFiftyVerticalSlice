@@ -94,7 +94,7 @@ fn update_indicator_color(
     let mut index = 0;
     for mut platform_collision_sprites in platform_collision_query.iter_mut() {
         index += 1;
-        if platform_color_vector[index - 1].already_collided == true {
+        if platform_color_vector[index - 1].already_collided  {
             platform_collision_sprites.color = Color::GREEN;
         } else {
             platform_collision_sprites.color = Color::ORANGE_RED;

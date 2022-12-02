@@ -26,7 +26,7 @@ impl Plugin for GameTimerPlugin {
             .insert_resource(GameTimerUIOffset(Vec3::new(
                 960.0 / 15.0,
                 540.0 / 15.0,
-                1.0,
+                0.0,
             )))
             .insert_resource(CurrentGameTime(0.0))
             .insert_resource(FinalGameTime(0.0))
@@ -64,7 +64,6 @@ fn show_timer_ui_system(
     let text_style = TextStyle {
         font,
         font_size: 75.0,
-        // f07927
         color: Color::Hsla {
             hue: 0.07,
             saturation: 0.87,
@@ -78,7 +77,7 @@ fn show_timer_ui_system(
         Text2dBundle {
             text: Text::from_section(
                 game_stopwatch.0.elapsed_secs().to_string(),
-                text_style.clone(),
+                text_style,
             )
             .with_alignment(text_alignment),
             transform: Transform::from_xyz(
@@ -136,10 +135,3 @@ fn hide_timer_ui_system(
         commands.entity(entities).despawn_recursive();
     }
 }
-
-// Show Timer UI
-// Start Timer
-// Update Timer
-// Stop Timer
-// Reset Timer + Save Time
-// Hide Timer

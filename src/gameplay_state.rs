@@ -23,7 +23,7 @@ impl Plugin for GameplayStatePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TopFloorReachedEvent>()
             .add_event::<DeathRegionReachedEvent>()
-            .insert_resource(Gravity(-220.0))
+            .insert_resource(Gravity(-250.0))
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(450.0))
             // .add_plugin(RapierDebugRenderPlugin::default())
             .add_plugin(player::PlayerPlugin)
@@ -72,7 +72,7 @@ fn game_completion_system(
         player_object.0.score = 0;
 
         for mut platform_object in platform_query.iter_mut() {
-            if platform_object.already_collided != false {
+            if platform_object.already_collided {
                 platform_object.already_collided = false;
             }
         }
@@ -83,7 +83,7 @@ fn game_completion_system(
         player_object.0.score = 0;
 
         for mut platform_object in platform_query.iter_mut() {
-            if platform_object.already_collided != false {
+            if platform_object.already_collided {
                 platform_object.already_collided = false;
             }
         }
