@@ -54,13 +54,14 @@ pub fn spawn_player_system(mut commands: Commands, asset_server: Res<AssetServer
             },
             RigidBody::Dynamic,
             Velocity::zero(),
-            Collider::ball(PLAYER_SIZE / 1.6),
+            Collider::ball(PLAYER_SIZE / 1.7),
+            ColliderMassProperties::Mass(3.85),
             ActiveEvents::COLLISION_EVENTS,
             LockedAxes::ROTATION_LOCKED,
             (ActiveCollisionTypes::default() | ActiveCollisionTypes::DYNAMIC_KINEMATIC),
             Player {
-                movement_speed: 386.0,
-                jump_force: 244.8,
+                movement_speed: 356.0,
+                jump_force: 268.2,
                 player_colliding: false,
                 player_grounded: false,
                 player_facing_right: true,
@@ -122,7 +123,7 @@ fn player_input_system(
 
     let down = keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down);
     if down {
-        player.1.linvel.y = -player.0.jump_force * 4.0;
+        player.1.linvel.y = -player.0.jump_force * 3.5;
     }
 
     let respawn = keyboard_input.just_pressed(KeyCode::R);

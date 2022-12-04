@@ -23,8 +23,8 @@ impl Plugin for GameplayStatePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TopFloorReachedEvent>()
             .add_event::<DeathRegionReachedEvent>()
-            .insert_resource(Gravity(-250.0))
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(450.0))
+            .insert_resource(Gravity(-275.0))
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(550.0))
             // .add_plugin(RapierDebugRenderPlugin::default())
             .add_plugin(player::PlayerPlugin)
             .add_plugin(game_camera::GameCameraPlugin)
@@ -67,7 +67,7 @@ fn game_completion_system(
 ) {
     let (mut player_object, mut _player_transform) = player_query.single_mut();
 
-    for _ev in ev_game_completed.iter() {
+    let mut reset_game = || {
         player_object.1.translation = Vec3::new(0.0, -PLAYER_SIZE * 2.0, 0.0);
         player_object.0.score = 0;
 
@@ -76,16 +76,13 @@ fn game_completion_system(
                 platform_object.already_collided = false;
             }
         }
+    };
+
+    for _ev in ev_game_completed.iter() {
+        reset_game();
     }
 
     for _ev in ev_game_failed.iter() {
-        player_object.1.translation = Vec3::new(0.0, -PLAYER_SIZE * 2.0, 0.0);
-        player_object.0.score = 0;
-
-        for mut platform_object in platform_query.iter_mut() {
-            if platform_object.already_collided {
-                platform_object.already_collided = false;
-            }
-        }
+        reset_game();
     }
 }

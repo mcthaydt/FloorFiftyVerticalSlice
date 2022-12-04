@@ -13,11 +13,11 @@ impl Plugin for AudioManagerPlugin {
 
 fn play_game_music(asset_server: Res<AssetServer>, audio: Res<Audio>) {
     audio
-        .play(asset_server.load("Track3.wav"))
+        .play(asset_server.load("Track4.wav"))
         .fade_in(AudioTween::new(
-            Duration::from_secs(2),
+            Duration::from_secs(0),
             AudioEasing::OutPowi(2),
         ))
-        .with_volume(0.8)
+        .with_volume(0.95)
         .looped();
 }
