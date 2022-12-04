@@ -12,6 +12,9 @@ pub struct GameCameraPlugin;
 #[derive(Component)]
 struct PlayerCamera {
     follow_speed: f32,
+    zoom_speed: f32,
+    stationary_zoom_amt: f32,
+    motion_zoom_amt: f32,
 }
 
 #[derive(Component)]
@@ -27,8 +30,8 @@ impl Plugin for GameCameraPlugin {
         app.insert_resource(CameraStopwatch(Stopwatch::new()))
             .add_system_set(
                 SystemSet::on_enter(GameplayStateSubstates::PreGame)
-                    .with_system(initilizate_camera_system)
-                    .with_system(initilizate_background_system),
+                    .with_system(spawn_camera_system)
+                    .with_system(spawn_background_system),
             )
             .add_system_set(
                 SystemSet::on_update(GameplayStateSubstates::DuringGame)
@@ -38,7 +41,7 @@ impl Plugin for GameCameraPlugin {
     }
 }
 
-fn initilizate_camera_system(mut commands: Commands) {
+fn spawn_camera_system(mut commands: Commands) {
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
@@ -49,7 +52,7 @@ fn initilizate_camera_system(mut commands: Commands) {
                 clear_color: ClearColorConfig::Custom(Color::hex(BACKGROUND_COLOR).unwrap()),
             },
             projection: OrthographicProjection {
-                scale: 0.85,
+                scale: 0.8,
                 ..default()
             },
             transform: Transform::from_xyz(0.0, 0.0, 1.0),
@@ -57,14 +60,19 @@ fn initilizate_camera_system(mut commands: Commands) {
         },
         BloomSettings {
             threshold: 0.68,
-            intensity: 3.05,
+            intensity: 3.0,
             ..default()
         },
-        PlayerCamera { follow_speed: 5.0 },
+        PlayerCamera {
+            follow_speed: 5.0,
+            zoom_speed: 1.5,
+            stationary_zoom_amt: 0.8,
+            motion_zoom_amt: 1.1,
+        },
     ));
 }
 
-fn initilizate_background_system(
+fn spawn_background_system(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     window: Res<WindowDimensions>,
@@ -85,32 +93,33 @@ fn initilizate_background_system(
 
 fn follow_player_system(
     mut camera_query: Query<((&mut Transform, &PlayerCamera), With<PlayerCamera>)>,
-    player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,
     mut background_query: Query<
         &mut Transform,
         (With<Background>, Without<PlayerCamera>, Without<Player>),
     >,
+    player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,
     time: Res<Time>,
 ) {
     let (mut camera, _camera_object) = camera_query.single_mut();
-    let player = player_query.single();
     let mut background = background_query.single_mut();
+    let player = player_query.single();
 
     let follow_pos: Vec3 = Vec3::new(0.0, player.translation.y, 1.0);
     camera.0.translation = camera
         .0
         .translation
         .lerp(follow_pos, time.delta_seconds() * camera.1.follow_speed);
+
     background.translation = Vec3::new(0.0, camera.0.translation.y, -1.0);
 }
 
 fn camera_zoom_system(
-    mut camera_query: Query<&mut OrthographicProjection, With<PlayerCamera>>,
+    mut camera_query: Query<(&mut OrthographicProjection, &PlayerCamera), With<PlayerCamera>>,
     player_query: Query<&Velocity, With<Player>>,
-    time: Res<Time>,
     mut game_stopwatch: ResMut<CameraStopwatch>,
+    time: Res<Time>,
 ) {
-    let mut camera_proj = camera_query.single_mut();
+    let (mut camera_proj, camera_obj) = camera_query.single_mut();
     let player_vel = player_query.single();
 
     if player_vel.linvel.x.abs() < 10.0 {
@@ -121,12 +130,12 @@ fn camera_zoom_system(
 
     let target_scale;
     if game_stopwatch.0.elapsed_secs() > 0.45 {
-        target_scale = 0.80;
+        target_scale = camera_obj.stationary_zoom_amt;
     } else {
-        target_scale = 1.10;
+        target_scale = camera_obj.motion_zoom_amt;
     }
 
     camera_proj.scale = camera_proj
         .scale
-        .lerp(target_scale, time.delta_seconds() * 1.5);
+        .lerp(target_scale, time.delta_seconds() * camera_obj.zoom_speed);
 }

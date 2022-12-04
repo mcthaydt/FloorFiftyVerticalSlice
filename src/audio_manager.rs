@@ -6,12 +6,11 @@ pub struct AudioManagerPlugin;
 
 impl Plugin for AudioManagerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(AudioPlugin)
-            .add_startup_system(play_game_music);
+        app.add_plugin(AudioPlugin).add_startup_system(play_music);
     }
 }
 
-fn play_game_music(asset_server: Res<AssetServer>, audio: Res<Audio>) {
+fn play_music(asset_server: Res<AssetServer>, audio: Res<Audio>) {
     audio
         .play(asset_server.load("Track4.wav"))
         .fade_in(AudioTween::new(

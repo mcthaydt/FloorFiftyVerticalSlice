@@ -11,17 +11,17 @@ impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_enter(GameplayStateSubstates::PreGame)
-                .with_system(initilizate_black_bars_system)
-                .with_system(initilizate_score_system),
+                .with_system(show_black_bars_system)
+                .with_system(show_score_ui_system),
         )
         .add_system_set(
             SystemSet::on_update(GameplayStateSubstates::DuringGame)
-                .with_system(update_score_system),
+                .with_system(update_score_ui_system),
         );
     }
 }
 
-fn initilizate_black_bars_system(mut commands: Commands, _asset_server: Res<AssetServer>) {
+fn show_black_bars_system(mut commands: Commands, _asset_server: Res<AssetServer>) {
     let root = commands
         .spawn(NodeBundle {
             style: Style {
@@ -63,60 +63,32 @@ fn initilizate_black_bars_system(mut commands: Commands, _asset_server: Res<Asse
     commands.entity(root).push_children(&[bottom_bar]);
 }
 
-fn initilizate_score_system(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn show_score_ui_system(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("papercut.ttf");
-    let score_ui = commands
-        .spawn((
-            TextBundle::from_section(
-                "0.0".to_string(),
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 130.0,
-                    color: Color::hex("FFFFFF7F").unwrap(),
-                },
-            )
-            .with_style(Style {
-                align_self: AlignSelf::FlexEnd,
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    top: Val::Percent(6.5),
-                    left: Val::Percent(5.0),
-                    ..default()
-                },
+    commands.spawn((
+        TextBundle::from_section(
+            "".to_string(),
+            TextStyle {
+                font: font.clone(),
+                font_size: 130.0,
+                color: Color::hex("FFFFFF7F").unwrap(),
+            },
+        )
+        .with_style(Style {
+            align_self: AlignSelf::FlexEnd,
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                top: Val::Percent(6.5),
+                left: Val::Percent(5.0),
                 ..default()
-            }),
-            ScoreUI,
-        ))
-        .id();
-
-    let score_ui_bg = commands
-        .spawn((
-            TextBundle::from_section(
-                "0.0".to_string(),
-                TextStyle {
-                    font: font,
-                    font_size: 150.0,
-                    color: Color::hex("FFFFFF7F").unwrap(),
-                },
-            )
-            .with_style(Style {
-                align_self: AlignSelf::FlexEnd,
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    top: Val::Percent(7.5),
-                    left: Val::Percent(5.0),
-                    ..default()
-                },
-                ..default()
-            }),
-            ScoreUI,
-        ))
-        .id();
-
-    commands.entity(score_ui_bg).push_children(&[score_ui]);
+            },
+            ..default()
+        }),
+        ScoreUI,
+    ));
 }
 
-fn update_score_system(
+fn update_score_ui_system(
     mut text_query: Query<&mut Text, With<ScoreUI>>,
     player_query: Query<&Player, With<Player>>,
 ) {

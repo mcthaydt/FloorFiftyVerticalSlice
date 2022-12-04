@@ -1,5 +1,5 @@
 use crate::player::Player;
-use crate::GameplayStateSubstates;
+use crate::{GameplayStateSubstates, WINDOW_HEIGHT, WINDOW_WIDTH};
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
@@ -24,8 +24,8 @@ impl Plugin for GameTimerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GameStopwatch(Stopwatch::new()))
             .insert_resource(GameTimerUIOffset(Vec3::new(
-                960.0 / 15.0,
-                540.0 / 15.0,
+                WINDOW_WIDTH as f32 / 15.0,
+                WINDOW_HEIGHT as f32 / 15.0,
                 0.0,
             )))
             .insert_resource(CurrentGameTime(0.0))
@@ -54,8 +54,8 @@ impl Plugin for GameTimerPlugin {
 
 fn show_timer_ui_system(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut game_stopwatch: ResMut<GameStopwatch>,
+    asset_server: Res<AssetServer>,
     game_timer_ui_offset: Res<GameTimerUIOffset>,
 ) {
     game_stopwatch.0.pause();
@@ -75,11 +75,8 @@ fn show_timer_ui_system(
 
     commands.spawn((
         Text2dBundle {
-            text: Text::from_section(
-                game_stopwatch.0.elapsed_secs().to_string(),
-                text_style,
-            )
-            .with_alignment(text_alignment),
+            text: Text::from_section(game_stopwatch.0.elapsed_secs().to_string(), text_style)
+                .with_alignment(text_alignment),
             transform: Transform::from_xyz(
                 game_timer_ui_offset.0.x,
                 game_timer_ui_offset.0.y,
@@ -96,12 +93,12 @@ fn start_timer_system(mut game_stopwatch: ResMut<GameStopwatch>) {
 }
 
 fn update_timer_system(
-    mut game_stopwatch: ResMut<GameStopwatch>,
-    mut current_game_time: ResMut<CurrentGameTime>,
-    time: Res<Time>,
     mut game_timer_ui_query: Query<(&mut Text, &mut Transform), With<GameTimerUI>>,
     player_query: Query<&Transform, (With<Player>, Without<GameTimerUI>)>,
+    mut game_stopwatch: ResMut<GameStopwatch>,
+    mut current_game_time: ResMut<CurrentGameTime>,
     game_timer_ui_offset: Res<GameTimerUIOffset>,
+    time: Res<Time>,
 ) {
     game_stopwatch.0.tick(time.delta());
     current_game_time.0 = game_stopwatch.0.elapsed_secs();
@@ -116,17 +113,17 @@ fn update_timer_system(
 
 fn reset_and_save_timer_system(
     mut game_stopwatch: ResMut<GameStopwatch>,
-    current_game_time: Res<CurrentGameTime>,
     mut final_game_time: ResMut<FinalGameTime>,
+    current_game_time: Res<CurrentGameTime>,
 ) {
     game_stopwatch.0.pause();
     final_game_time.0 = current_game_time.0;
 }
 
 fn hide_timer_ui_system(
+    mut commands: Commands,
     mut game_timer_ui_query: Query<&mut Text, With<GameTimerUI>>,
     game_timer_ui_entity_query: Query<Entity, With<GameTimerUI>>,
-    mut commands: Commands,
 ) {
     let mut text = game_timer_ui_query.single_mut();
     text.sections[0].value = "".to_string();
