@@ -97,12 +97,16 @@ fn player_input_system(
     )>,
     mut failure_event: EventWriter<DeathRegionReachedEvent>,
 ) {
+    // Get the mutable player component and velocity component
     let (mut player, _player_velocity) = player_query.single_mut();
 
+    // Check if the player is pressing the left or right movement keys
     let left = keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
     let right = keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
+    // Calculate the x input direction based on the left and right keys
     let x_input = -(left as i8) + right as i8;
 
+    // Set the player's facing direction based on the movement keys
     if right {
         player.0.player_facing_right = true;
     }
@@ -110,27 +114,36 @@ fn player_input_system(
         player.0.player_facing_right = false;
     }
 
+    // Calculate the player's input direction vector
     let mut player_input_dir = Vec2::new(x_input as f32, 0.0);
     if player_input_dir != Vec2::ZERO {
+        // Normalize the input direction vector
         player_input_dir /= player_input_dir.length();
     }
 
+    // Set the player's x velocity based on the input direction and movement speed
     player.1.linvel.x = player_input_dir.x * player.0.movement_speed;
 
+    // If the player is colliding with something, set the y velocity to the jump force
     if player.0.player_colliding {
         player.1.linvel.y = player.0.jump_force;
     }
 
+    // Check if the player is pressing the down key
     let down = keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down);
+    // If the player is pressing the down key, set the y velocity to a negative jump force
     if down {
-        player.1.linvel.y = -player.0.jump_force * 3.5;
+        player.1.linvel.y = -player.0.jump_force * 5.0;
     }
 
+    // Check if the player has just pressed the respawn key
     let respawn = keyboard_input.just_pressed(KeyCode::R);
+    // If the player has pressed the respawn key, send the death region event
     if respawn {
         failure_event.send(DeathRegionReachedEvent);
     }
 
+    // If the player's y position is below the death region, send the death region event
     if player.3.translation().y < -400.0 {
         failure_event.send(DeathRegionReachedEvent);
     }
@@ -146,22 +159,30 @@ fn player_collision_detection_system(
     mut player_query: Query<((Entity, &mut Player), With<Player>)>,
     mut platform_query: Query<(Entity, &mut Platform), With<Platform>>,
 ) {
+    // Get the player entity and object
     let (mut player_entity, _player_object) = player_query.single_mut();
+    // Get the player ground detection entity and object
     let (player_ground_detection_entity, _player_ground_detection_object) =
         player_ground_detection_query.single();
 
+    // Initialize a counter for the total number of platforms
     let mut total_count = 0;
 
+    // Iterate over the platform entities and count them
     for _index in platform_query.iter() {
         total_count += 1;
     }
 
+    // If the player's score is equal to the total number of platforms, send the top floor reached event
     if player_entity.1.score == total_count {
         top_floor_reached_event.send(TopFloorReachedEvent);
     }
 
+    // Iterate over the collision events
     for collision_event in collision_events.iter() {
+        // Iterate over the platform entities and objects
         for (platform_entity, mut platform_object) in platform_query.iter_mut() {
+            // If the collision event indicates that the player has started colliding with a platform, set the player colliding flag to true
             if *collision_event
                 == CollisionEvent::Started(
                     player_entity.0,
@@ -170,7 +191,9 @@ fn player_collision_detection_system(
                 )
             {
                 player_entity.1.player_colliding = true;
-            } else if *collision_event
+            } 
+            // If the collision event indicates that the player has stopped colliding with a platform, set the player colliding flag to false
+            else if *collision_event
                 == CollisionEvent::Stopped(
                     player_entity.0,
                     platform_entity,
@@ -180,6 +203,7 @@ fn player_collision_detection_system(
                 player_entity.1.player_colliding = false;
             }
 
+            // If the collision event indicates that the player ground detection has started colliding with a platform, set the player grounded flag to true
             if *collision_event
                 == CollisionEvent::Started(
                     player_ground_detection_entity.0,
@@ -188,11 +212,14 @@ fn player_collision_detection_system(
                 )
             {
                 player_entity.1.player_grounded = true;
+                // If the platform has not already been collided with, increase the player's score and set the platform's already collided flag to true
                 if !platform_object.already_collided {
                     player_entity.1.score += 1;
                     platform_object.already_collided = true;
                 }
-            } else if *collision_event
+            } 
+            // If the collision event indicates that the player ground detection has stopped colliding with a platform, set the player grounded flag to false
+            else if *collision_event
                 == CollisionEvent::Stopped(
                     player_ground_detection_entity.0,
                     platform_entity,

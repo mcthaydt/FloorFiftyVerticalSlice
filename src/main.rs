@@ -1,25 +1,24 @@
-use bevy::{prelude::*, window::PresentMode};
-// use bevy_inspector_egui::WorldInspectorPlugin;
-
 use audio_manager::AudioManagerPlugin;
-use game_window::{GameWindowPlugin, WindowDimensions};
+use bevy::{prelude::*, window::PresentMode};
 use gameplay_state::{
     DeathRegionReachedEvent, GameplayStatePlugin, GameplayStateSubstates, TopFloorReachedEvent,
 };
 use platforms::Platform;
 use player::{Player, PLAYER_SIZE};
+use window_manager::{GameWindowPlugin, WindowDimensions};
+// use bevy_inspector_egui::WorldInspectorPlugin;
 
 mod audio_manager;
 mod game_camera;
 mod game_timer;
-mod game_window;
 mod gameplay_state;
 mod platform_indicators;
 mod platforms;
 mod player;
 mod ui;
+mod window_manager;
 
-const WINDOW_TITLE: &str = "FLOOR FIFTY";
+const WINDOW_TITLE: &str = "FLOOR FIFTY VERTICAL SLICE";
 const WINDOW_WIDTH: i16 = 960;
 const WINDOW_HEIGHT: i16 = 540;
 

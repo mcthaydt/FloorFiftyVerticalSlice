@@ -26,11 +26,14 @@ impl Plugin for PlatformIndicator {
     }
 }
 
+// Spawns a visual indicator for platforms that have been collided with
 fn spawn_platform_collision_indicators(
     mut commands: Commands,
     platform_query: Query<&Transform, With<Platform>>,
 ) {
+    // Iterate through all platforms with the Platform component
     for platfroms in platform_query.iter() {
+        // Spawn a sprite for each platform, with a specified color, size, and position
         commands.spawn((
             SpriteBundle {
                 sprite: Sprite {
@@ -50,6 +53,7 @@ fn spawn_platform_collision_indicators(
     }
 }
 
+// Updates the position of the visual indicator to match the position of the platform
 fn update_indicator_position(
     platform_query: Query<&Transform, With<Platform>>,
     mut platform_collision_query: Query<
@@ -57,12 +61,14 @@ fn update_indicator_position(
         (With<PlatformCollisionIndicator>, Without<Platform>),
     >,
 ) {
+    // Create a vector of platform positions
     let mut platform_positions_vector = Vec::new();
 
     for platform_transform in platform_query.iter() {
         platform_positions_vector.push(platform_transform.translation)
     }
 
+    // Iterate through all platform collision indicators and update their position
     let mut index = 0;
     for mut platform_collision_transform in platform_collision_query.iter_mut() {
         index += 1;
@@ -74,6 +80,8 @@ fn update_indicator_position(
     }
 }
 
+
+// Updates the color of the visual indicator based on whether the platform has been collided with
 fn update_indicator_color(
     platform_query: Query<&Platform, (With<Platform>, Without<Player>)>,
     mut platform_collision_query: Query<
@@ -85,33 +93,35 @@ fn update_indicator_color(
         ),
     >,
 ) {
+    // Create a vector of platforms
     let mut platform_color_vector = Vec::new();
 
     for platforms in platform_query.iter() {
         platform_color_vector.push(platforms);
     }
 
+    // Iterate through all platform collision indicators and update their color
     let mut index = 0;
     for mut platform_collision_sprites in platform_collision_query.iter_mut() {
         index += 1;
         if platform_color_vector[index - 1].already_collided  {
+            // Set the color to green if the platform has been collided with
             platform_collision_sprites.color = Color::GREEN;
         } else {
+            // Set the color to red if the platform has not been collided with
             platform_collision_sprites.color = Color::ORANGE_RED;
         }
     }
 }
 
+// Despawns the visual indicators for platforms
 fn despawn_platform_collision_indicators(
     mut commands: Commands,
     indicator_query: Query<Entity, With<PlatformCollisionIndicator>>,
 ) {
+    // Iterate through all entities with the PlatformCollisionIndicator component
     for entities in indicator_query.iter() {
+        // Despawn the entity and all its children
         commands.entity(entities).despawn_recursive();
     }
 }
-// spawn platform collsiion indicators
-// update colision indicators
-// // update platform collsiion indicator position
-// // update platform collision indicator color
-// delete collision indicators

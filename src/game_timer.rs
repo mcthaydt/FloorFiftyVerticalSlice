@@ -58,9 +58,13 @@ fn show_timer_ui_system(
     asset_server: Res<AssetServer>,
     game_timer_ui_offset: Res<GameTimerUIOffset>,
 ) {
+    // The game's stopwatch is paused to prevent timer autostart
     game_stopwatch.0.pause();
 
+    // Load the font from the asset server
     let font = asset_server.load("papercut.ttf");
+
+    // Define the style for the text
     let text_style = TextStyle {
         font,
         font_size: 75.0,
@@ -71,8 +75,11 @@ fn show_timer_ui_system(
             alpha: 0.85,
         },
     };
+
+    // Set the text alignment
     let text_alignment = TextAlignment::CENTER_LEFT;
 
+    // Spawn the text entity with the defined style and alignment
     commands.spawn((
         Text2dBundle {
             text: Text::from_section(game_stopwatch.0.elapsed_secs().to_string(), text_style)
@@ -100,14 +107,21 @@ fn update_timer_system(
     game_timer_ui_offset: Res<GameTimerUIOffset>,
     time: Res<Time>,
 ) {
+    // Update the elapsed time of the game stopwatch
     game_stopwatch.0.tick(time.delta());
+    // Save the current elapsed time in a variable
     current_game_time.0 = game_stopwatch.0.elapsed_secs();
 
+    // Get mutable references to the timer UI text and transform
     let (mut text, mut text_transform) = game_timer_ui_query.single_mut();
+    // Truncate the elapsed time to two decimal places
     let text_value = f32::trunc(current_game_time.0 * 100.0) / 100.0;
+    // Update the text displayed in the timer UI element
     text.sections[0].value = text_value.to_string();
 
+    // Get the player's transform
     let player_transform = player_query.single();
+    // Update the position of the timer UI element to be relative to the player's position
     text_transform.translation = game_timer_ui_offset.0 + player_transform.translation;
 }
 
@@ -125,6 +139,7 @@ fn hide_timer_ui_system(
     mut game_timer_ui_query: Query<&mut Text, With<GameTimerUI>>,
     game_timer_ui_entity_query: Query<Entity, With<GameTimerUI>>,
 ) {
+    // Reset everything to default value
     let mut text = game_timer_ui_query.single_mut();
     text.sections[0].value = "".to_string();
 

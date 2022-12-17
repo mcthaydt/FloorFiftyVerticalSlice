@@ -1,9 +1,6 @@
-use crate::{game_window::WindowDimensions, GameplayStateSubstates, Player};
+use crate::{window_manager::WindowDimensions, GameplayStateSubstates, Player};
 use bevy::time::Stopwatch;
-use bevy::{
-    core_pipeline::{bloom::BloomSettings, clear_color::ClearColorConfig},
-    prelude::*,
-};
+use bevy::{core_pipeline::bloom::BloomSettings, prelude::*};
 use bevy_rapier2d::prelude::*;
 use lerp::Lerp;
 
@@ -23,8 +20,6 @@ struct Background;
 #[derive(Resource)]
 struct CameraStopwatch(Stopwatch);
 
-const BACKGROUND_COLOR: &str = "c0dffa";
-
 impl Plugin for GameCameraPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(CameraStopwatch(Stopwatch::new()))
@@ -42,14 +37,13 @@ impl Plugin for GameCameraPlugin {
 }
 
 fn spawn_camera_system(mut commands: Commands) {
+    // This code spawns a 2D camera entity with a bloom effect and a `PlayerCamera` component.
+    // The camera has an orthographic projection and is positioned at (0, 0, 1).
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
                 hdr: true,
                 ..default()
-            },
-            camera_2d: Camera2d {
-                clear_color: ClearColorConfig::Custom(Color::hex(BACKGROUND_COLOR).unwrap()),
             },
             projection: OrthographicProjection {
                 scale: 0.8,
@@ -77,6 +71,8 @@ fn spawn_background_system(
     asset_server: Res<AssetServer>,
     window: Res<WindowDimensions>,
 ) {
+    // This code spawns a sprite entity with a `Background` component and a texture from the `asset_server`.
+    // The sprite is positioned at (0, 0, -1) and has a custom size that is slightly larger than the window size.
     commands.spawn((
         SpriteBundle {
             sprite: Sprite {
@@ -100,6 +96,9 @@ fn follow_player_system(
     player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,
     time: Res<Time>,
 ) {
+    // This code updates the position of a camera entity and a background sprite entity.
+    // The camera follows the player's vertical position, and the background sprite is positioned at the same vertical position as the camera.
+    
     let (mut camera, _camera_object) = camera_query.single_mut();
     let mut background = background_query.single_mut();
     let player = player_query.single();
@@ -119,6 +118,10 @@ fn camera_zoom_system(
     mut game_stopwatch: ResMut<CameraStopwatch>,
     time: Res<Time>,
 ) {
+    // This code updates the scale of a camera's projection (zoom) based on the player's movement and a timer.
+    // If the player is stationary for a certain amount of time, the camera zooms in.
+    // Otherwise, the camera zooms out.
+
     let (mut camera_proj, camera_obj) = camera_query.single_mut();
     let player_vel = player_query.single();
 

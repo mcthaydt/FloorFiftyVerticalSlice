@@ -46,6 +46,7 @@ impl Plugin for GameplayStatePlugin {
     }
 }
 
+// Initialize the physics system with the specified gravity value
 pub fn initilizate_physics_system(
     mut rapier_config: ResMut<RapierConfiguration>,
     gravity: Res<Gravity>,
@@ -53,12 +54,14 @@ pub fn initilizate_physics_system(
     rapier_config.gravity = Vec2::new(0.0, gravity.0);
 }
 
+// Switch to the "DuringGame" gameplay substate
 fn switch_gameplay_substates_system(mut gameplay_substate: ResMut<State<GameplayStateSubstates>>) {
     gameplay_substate
         .set(GameplayStateSubstates::DuringGame)
         .unwrap();
 }
 
+// Reset the game when the top floor is reached or the death region is reached
 fn game_completion_system(
     mut player_query: Query<((&mut Player, &mut Transform), With<Player>)>,
     mut platform_query: Query<&mut Platform, With<Platform>>,
@@ -67,6 +70,7 @@ fn game_completion_system(
 ) {
     let (mut player_object, mut _player_transform) = player_query.single_mut();
 
+    // Helper function to reset the game
     let mut reset_game = || {
         player_object.1.translation = Vec3::new(0.0, -PLAYER_SIZE * 2.0, 0.0);
         player_object.0.score = 0;
@@ -78,10 +82,12 @@ fn game_completion_system(
         }
     };
 
+    // Reset the game when the top floor is reached
     for _ev in ev_game_completed.iter() {
         reset_game();
     }
 
+    // Reset the game when the death region is reached
     for _ev in ev_game_failed.iter() {
         reset_game();
     }

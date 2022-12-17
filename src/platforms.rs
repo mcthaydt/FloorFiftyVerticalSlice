@@ -73,19 +73,26 @@ fn spawn_initial_platform_system(
     ));
 }
 
+// Spawns a batch of platforms in the game
 fn spawn_platform_batch(
     mut commands: Commands,
     window: Res<WindowDimensions>,
     spawn_count: Res<SpawnCount>,
     asset_server: Res<AssetServer>,
 ) {
+    // Calculate the left and right bounds for the platforms
     let left_bound: f32 = -(window.width / 2.0 - PLATFORM_WIDTH);
     let right_bound: f32 = window.width / 2.0 - PLATFORM_WIDTH;
+
+    // Calculate the spacing between the platforms
     let spacing: f32 = window.height / 4.2;
 
+    // Initialize a random number generator
     let mut rng = rand::thread_rng();
 
+    // Iterate through the number of platforms to be spawned
     for index in 1..(spawn_count.0 + 1) {
+        // Spawn the platform sprite with a random position within the bounds and specified texture
         let platform = commands
             .spawn((
                 SpriteBundle {
@@ -105,13 +112,18 @@ fn spawn_platform_batch(
                     texture: asset_server.load("PlatformTexture2.png"),
                     ..Default::default()
                 },
+                // Add a fixed rigid body component
                 RigidBody::Fixed,
+                // Add a cuboid collider component with specified dimensions
                 Collider::cuboid(PLATFORM_WIDTH / 2.0, PLATFORM_HEIGHT / 2.0),
             ))
             .id();
 
+        // Generate random values for the platform type and speed
         let plat_type_rng_value = rng.gen_range(0..200);
         let plat_speed_rng_value = rng.gen_range(100.0..200.0);
+
+        // Insert the Platform component based on the random values
         if plat_type_rng_value % 2 == 0 {
             commands.entity(platform).insert(Platform {
                 already_collided: false,
@@ -130,19 +142,26 @@ fn spawn_platform_batch(
     }
 }
 
+// Modifies the properties of moving platforms in the game
 fn platform_properties_system(
     mut platform_query: Query<(&mut Platform, &mut Transform), With<Platform>>,
     time: Res<Time>,
     window: Res<WindowDimensions>,
 ) {
+    // Calculate the left and right bounds for the platforms
     let left_bound: f32 = -(window.width / 2.0 - PLATFORM_WIDTH);
     let right_bound: f32 = window.width / 2.0 - PLATFORM_WIDTH;
 
+    // Iterate through the platforms in the query
     for (mut platform_object, mut platform_transform) in platform_query.iter_mut() {
+        // Check if the platform is a moving platform
         if platform_object.platform_type == PlatformType::Moving {
+            // Update the position of the platform based on its speed and direction
             platform_transform.translation.x += platform_object.platform_moving_speed
                 * time.delta_seconds()
                 * platform_object.direction;
+
+            // Check if the platform has reached the left or right bounds
             if platform_transform.translation.x > right_bound {
                 platform_transform.translation.x = right_bound;
                 platform_object.direction = -1.0;
